@@ -1,0 +1,619 @@
+<!doctype html>
+<html lang="th" class="h-full">
+ <head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ทดสอบปอด เลิกบุหรี่</title>
+  <script src="https://cdn.tailwindcss.com/3.4.17"></script>
+  <script src="/_sdk/element_sdk.js"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;600;700&amp;display=swap" rel="stylesheet">
+  <style>
+    * { font-family: 'Kanit', sans-serif; }
+    
+    .tree-container {
+      position: relative;
+      width: 100%;
+      height: 400px;
+      display: flex;
+      justify-content: center;
+      align-items: flex-end;
+    }
+    
+    .ground {
+      position: absolute;
+      bottom: 0;
+      width: 100%;
+      height: 60px;
+      background: linear-gradient(to bottom, #4ade80, #166534);
+      border-radius: 100% 100% 0 0;
+    }
+    
+    .trunk {
+      position: absolute;
+      bottom: 50px;
+      width: 30px;
+      background: linear-gradient(to right, #92400e, #b45309, #92400e);
+      border-radius: 5px;
+      transform-origin: bottom center;
+      transition: height 0.3s ease-out;
+    }
+    
+    .foliage {
+      position: absolute;
+      bottom: 80px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      transition: all 0.3s ease-out;
+    }
+    
+    .leaf-layer {
+      border-radius: 50%;
+      transition: all 0.3s ease-out;
+    }
+    
+    .leaf-layer-1 {
+      background: radial-gradient(circle at 30% 30%, #86efac, #22c55e);
+      box-shadow: inset -10px -10px 20px rgba(0,0,0,0.1);
+    }
+    
+    .leaf-layer-2 {
+      background: radial-gradient(circle at 30% 30%, #4ade80, #16a34a);
+      box-shadow: inset -10px -10px 20px rgba(0,0,0,0.1);
+      margin-top: -30%;
+    }
+    
+    .leaf-layer-3 {
+      background: radial-gradient(circle at 30% 30%, #22c55e, #15803d);
+      box-shadow: inset -10px -10px 20px rgba(0,0,0,0.15);
+      margin-top: -30%;
+    }
+    
+    .flower {
+      position: absolute;
+      width: 12px;
+      height: 12px;
+      background: radial-gradient(circle, #fef08a, #facc15);
+      border-radius: 50%;
+      opacity: 0;
+      transition: opacity 0.5s ease;
+    }
+    
+    .breath-meter {
+      width: 100%;
+      height: 20px;
+      background: #e5e7eb;
+      border-radius: 10px;
+      overflow: hidden;
+    }
+    
+    .breath-fill {
+      height: 100%;
+      background: linear-gradient(to right, #ef4444, #f97316, #eab308, #22c55e);
+      border-radius: 10px;
+      transition: width 0.1s ease-out;
+    }
+    
+    .pulse-ring {
+      position: absolute;
+      border: 3px solid #22c55e;
+      border-radius: 50%;
+      animation: pulse-ring 1.5s ease-out infinite;
+      opacity: 0;
+    }
+    
+    @keyframes pulse-ring {
+      0% { transform: scale(0.8); opacity: 0.8; }
+      100% { transform: scale(1.5); opacity: 0; }
+    }
+    
+    .breathing {
+      animation: breathe 0.5s ease-in-out infinite alternate;
+    }
+    
+    @keyframes breathe {
+      from { transform: scale(1); }
+      to { transform: scale(1.02); }
+    }
+    
+    .particle {
+      position: absolute;
+      width: 8px;
+      height: 8px;
+      background: rgba(134, 239, 172, 0.6);
+      border-radius: 50%;
+      pointer-events: none;
+    }
+    
+    @keyframes float-up {
+      0% { transform: translateY(0) scale(1); opacity: 1; }
+      100% { transform: translateY(-100px) scale(0); opacity: 0; }
+    }
+    
+    .btn-pulse {
+      animation: shadow-pulse 1.5s infinite;
+    }
+
+    @keyframes shadow-pulse {
+      0% { box-shadow: 0 0 0 0px rgba(59, 130, 246, 0.7); }
+      100% { box-shadow: 0 0 0 15px rgba(59, 130, 246, 0); }
+    }
+  </style>
+  <style>body { box-sizing: border-box; }</style>
+  <script src="/_sdk/data_sdk.js" type="text/javascript"></script>
+ </head>
+ <body class="h-full overflow-auto">
+  <div id="app-container" class="min-h-full w-full bg-gradient-to-b from-sky-300 via-sky-200 to-emerald-200 p-4 md:p-8">
+   <div class="max-w-2xl mx-auto"><!-- Header -->
+    <div class="text-center mb-6">
+     <h1 id="app-title" class="text-3xl md:text-4xl font-bold text-emerald-800 mb-2">🌱 ทดสอบปอด เลิกบุหรี่</h1>
+     <p id="instruction-text" class="text-emerald-700 text-lg">เป่าลมใส่ไมค์เพื่อปลูกต้นไม้ของคุณ</p>
+    </div><!-- Tree Display -->
+    <div class="bg-white/50 backdrop-blur rounded-3xl p-6 mb-6 shadow-lg">
+     <div class="tree-container" id="tree-container"><!-- Sky elements -->
+      <div class="absolute top-4 left-8 text-4xl animate-bounce" style="animation-duration: 3s;">
+       ☀️
+      </div>
+      <div class="absolute top-8 right-12 text-2xl opacity-80">
+       ☁️
+      </div>
+      <div class="absolute top-16 right-24 text-xl opacity-60">
+       ☁️
+      </div><!-- Tree -->
+      <div class="trunk" id="trunk" style="height: 30px;"></div>
+      <div class="foliage" id="foliage" style="opacity: 0;">
+       <div class="leaf-layer leaf-layer-3" id="leaf3" style="width: 40px; height: 40px;"></div>
+       <div class="leaf-layer leaf-layer-2" id="leaf2" style="width: 50px; height: 50px;"></div>
+       <div class="leaf-layer leaf-layer-1" id="leaf1" style="width: 60px; height: 60px;"></div><!-- Flowers -->
+       <div class="flower" id="flower1" style="top: 20%; left: 10%;"></div>
+       <div class="flower" id="flower2" style="top: 30%; right: 15%;"></div>
+       <div class="flower" id="flower3" style="top: 50%; left: 5%;"></div>
+       <div class="flower" id="flower4" style="top: 60%; right: 10%;"></div>
+       <div class="flower" id="flower5" style="top: 40%; left: 50%; transform: translateX(-50%);"></div>
+      </div><!-- Ground -->
+      <div class="ground"></div><!-- Pulse ring for breathing detection -->
+      <div class="pulse-ring" id="pulse-ring" style="width: 100px; height: 100px; bottom: 150px;"></div>
+     </div><!-- Growth Progress -->
+     <div class="mt-4">
+      <div class="flex justify-between text-sm text-emerald-700 mb-1"><span>การเติบโต</span> <span id="growth-percent">0%</span>
+      </div>
+      <div class="w-full h-4 bg-emerald-100 rounded-full overflow-hidden">
+       <div id="growth-bar" class="h-full bg-gradient-to-r from-emerald-400 to-emerald-600 rounded-full transition-all duration-300" style="width: 0%;"></div>
+      </div>
+     </div>
+    </div><!-- Breath Meter -->
+    <div id="breath-meter" class="bg-white/50 backdrop-blur rounded-2xl p-4 mb-6 shadow-lg hidden">
+     <div class="flex items-center gap-3 mb-2"><span class="text-2xl" id="breath-icon">💨</span> <span class="text-emerald-700 font-medium">ความแรงลมหายใจ</span> <span id="breath-status" class="ml-auto text-sm text-gray-500">รอการเป่า...</span>
+     </div>
+     <div class="breath-meter">
+      <div class="breath-fill" id="breath-fill" style="width: 0%;"></div>
+     </div>
+    </div><!-- Permission Container -->
+    <div id="permission-container" class="bg-blue-50/80 rounded-2xl p-6 mb-6 border border-blue-200 text-center">
+     <div class="text-4xl mb-4">
+      🎤
+     </div>
+     <h2 class="text-xl font-bold text-blue-800 mb-2">ต้องการเข้าถึงไมค์</h2>
+     <p class="text-blue-700 mb-4">กรุณาอนุญาตให้แอปเข้าถึงไมค์ของคุณ เพื่อทำการทดสอบปอด</p><button id="permission-btn" class="btn-pulse w-full py-3 px-6 bg-gradient-to-r from-blue-500 to-cyan-500 hover:from-blue-600 hover:to-cyan-600 text-white font-semibold rounded-xl shadow-lg transform transition hover:scale-[1.02] active:scale-[0.98]"> ✓ อนุญาตการใช้ไมค์ </button>
+    </div><!-- Start Button --> <button id="start-btn" class="w-full py-4 px-6 bg-gradient-to-r from-emerald-500 to-green-500 hover:from-emerald-600 hover:to-green-600 text-white text-xl font-semibold rounded-2xl shadow-lg transform transition hover:scale-[1.02] active:scale-[0.98] hidden"> 🎤 เริ่มทดสอบปอด </button> <!-- Status Message -->
+    <div id="status-container" class="mt-4 text-center hidden">
+     <p id="status-message" class="text-emerald-700 text-lg"></p>
+    </div><!-- Encouragement -->
+    <div class="mt-6 text-center">
+     <p id="encourage-text" class="text-emerald-600 text-sm">💚 ปอดแข็งแรง = ชีวิตที่ดีขึ้น 💚</p>
+    </div><!-- Tips -->
+    <div class="mt-6 bg-amber-50/80 rounded-2xl p-4 border border-amber-200">
+     <h3 class="font-semibold text-amber-800 mb-2">💡 เคล็ดลับการเลิกบุหรี่</h3>
+     <ul class="text-sm text-amber-700 space-y-1">
+      <li>• ฝึกหายใจลึกๆ เมื่อรู้สึกอยากสูบ</li>
+      <li>• ดื่มน้ำเปล่าให้มาก</li>
+      <li>• ออกกำลังกายสม่ำเสมอ</li>
+      <li>• หาเพื่อนหรือครอบครัวช่วยเป็นกำลังใจ</li>
+     </ul>
+    </div><!-- Results Panel -->
+    <div id="results-panel" class="mt-6 bg-white/70 rounded-2xl p-6 hidden">
+     <h3 class="text-xl font-bold text-emerald-800 mb-4 text-center">📊 ผลการทดสอบ</h3>
+     <div class="grid grid-cols-2 gap-4 text-center">
+      <div class="bg-emerald-50 rounded-xl p-3">
+       <div class="text-2xl font-bold text-emerald-600" id="result-strength">
+        -
+       </div>
+       <div class="text-sm text-emerald-700">
+        ความแรงลม
+       </div>
+      </div>
+      <div class="bg-blue-50 rounded-xl p-3">
+       <div class="text-2xl font-bold text-blue-600" id="result-duration">
+        -
+       </div>
+       <div class="text-sm text-blue-700">
+        ระยะเวลา
+       </div>
+      </div>
+      <div class="bg-amber-50 rounded-xl p-3">
+       <div class="text-2xl font-bold text-amber-600" id="result-consistency">
+        -
+       </div>
+       <div class="text-sm text-amber-700">
+        ความสม่ำเสมอ
+       </div>
+      </div>
+      <div class="bg-purple-50 rounded-xl p-3">
+       <div class="text-2xl font-bold text-purple-600" id="result-grade">
+        -
+       </div>
+       <div class="text-sm text-purple-700">
+        เกรด
+       </div>
+      </div>
+     </div>
+     <p id="result-message" class="mt-4 text-center text-emerald-700"></p><button id="retry-btn" class="mt-4 w-full py-3 bg-emerald-500 hover:bg-emerald-600 text-white font-semibold rounded-xl"> 🔄 ทดสอบอีกครั้ง </button>
+    </div>
+   </div>
+  </div>
+  <script>
+    // Default configuration
+    const defaultConfig = {
+      app_title: '🌱 ทดสอบปอด เลิกบุหรี่',
+      instruction_text: 'เป่าลมใส่ไมค์เพื่อปลูกต้นไม้ของคุณ',
+      encourage_text: '💚 ปอดแข็งแรง = ชีวิตที่ดีขึ้น 💚',
+      primary_color: '#059669',
+      secondary_color: '#0ea5e9',
+      background_color: '#ecfdf5',
+      text_color: '#065f46',
+      accent_color: '#fbbf24'
+    };
+
+    // App state
+    let audioContext = null;
+    let analyser = null;
+    let microphone = null;
+    let isListening = false;
+    let treeGrowth = 0;
+    let breathStrengths = [];
+    let breathDuration = 0;
+    let testStartTime = null;
+    let animationFrameId = null;
+
+    // Initialize Element SDK
+    if (window.elementSdk) {
+      window.elementSdk.init({
+        defaultConfig,
+        onConfigChange: async (config) => {
+          document.getElementById('app-title').textContent = config.app_title || defaultConfig.app_title;
+          document.getElementById('instruction-text').textContent = config.instruction_text || defaultConfig.instruction_text;
+          document.getElementById('encourage-text').textContent = config.encourage_text || defaultConfig.encourage_text;
+        },
+        mapToCapabilities: (config) => ({
+          recolorables: [
+            {
+              get: () => config.background_color || defaultConfig.background_color,
+              set: (value) => window.elementSdk.setConfig({ background_color: value })
+            },
+            {
+              get: () => config.primary_color || defaultConfig.primary_color,
+              set: (value) => window.elementSdk.setConfig({ primary_color: value })
+            },
+            {
+              get: () => config.text_color || defaultConfig.text_color,
+              set: (value) => window.elementSdk.setConfig({ text_color: value })
+            },
+            {
+              get: () => config.secondary_color || defaultConfig.secondary_color,
+              set: (value) => window.elementSdk.setConfig({ secondary_color: value })
+            },
+            {
+              get: () => config.accent_color || defaultConfig.accent_color,
+              set: (value) => window.elementSdk.setConfig({ accent_color: value })
+            }
+          ],
+          borderables: [],
+          fontEditable: undefined,
+          fontSizeable: undefined
+        }),
+        mapToEditPanelValues: (config) => new Map([
+          ['app_title', config.app_title || defaultConfig.app_title],
+          ['instruction_text', config.instruction_text || defaultConfig.instruction_text],
+          ['encourage_text', config.encourage_text || defaultConfig.encourage_text]
+        ])
+      });
+    }
+
+    // DOM Elements
+    const permissionBtn = document.getElementById('permission-btn');
+    const permissionContainer = document.getElementById('permission-container');
+    const breathMeterDiv = document.getElementById('breath-meter');
+    const startBtn = document.getElementById('start-btn');
+    const trunk = document.getElementById('trunk');
+    const foliage = document.getElementById('foliage');
+    const leaf1 = document.getElementById('leaf1');
+    const leaf2 = document.getElementById('leaf2');
+    const leaf3 = document.getElementById('leaf3');
+    const breathFill = document.getElementById('breath-fill');
+    const breathStatus = document.getElementById('breath-status');
+    const breathIcon = document.getElementById('breath-icon');
+    const growthBar = document.getElementById('growth-bar');
+    const growthPercent = document.getElementById('growth-percent');
+    const statusContainer = document.getElementById('status-container');
+    const statusMessage = document.getElementById('status-message');
+    const pulseRing = document.getElementById('pulse-ring');
+    const resultsPanel = document.getElementById('results-panel');
+    const retryBtn = document.getElementById('retry-btn');
+    const treeContainer = document.getElementById('tree-container');
+
+    // Event listeners
+    permissionBtn.addEventListener('click', requestMicrophonePermission);
+    startBtn.addEventListener('click', () => {
+      if (!isListening) {
+        startListening();
+      } else {
+        stopListening();
+      }
+    });
+    retryBtn.addEventListener('click', () => {
+      resetTree();
+      resultsPanel.classList.add('hidden');
+      startBtn.classList.remove('hidden');
+    });
+
+    function requestMicrophonePermission() {
+      // 1. สร้าง UI Feedback ทันทีที่กด
+      permissionBtn.textContent = '⏳ กำลังขอสิทธิ์จากเบราว์เซอร์...';
+      statusContainer.classList.remove('hidden');
+      
+      // 2. คำสั่งนี้จะ "บังคับ" ให้เบราว์เซอร์ดีดหน้าต่าง Prompt สีขาวๆ ด้านบนออกมาทันที
+      navigator.mediaDevices.getUserMedia({ audio: true })
+      .then(function(stream) {
+          // --- ถ้ากดยอมรับ (Allow) ---
+          window.micStream = stream;
+          permissionContainer.classList.add('hidden'); // ซ่อนหน้าต่างขอสิทธิ์
+          startBtn.classList.remove('hidden');       // โชว์ปุ่มเริ่มเกม
+          breathMeterDiv.classList.remove('hidden');  // โชว์เกจวัด
+          statusMessage.textContent = '✅ ไมค์เชื่อมต่อแล้ว!';
+          statusMessage.className = 'text-emerald-700 text-lg font-semibold';
+      })
+      .catch(function(err) {
+          // --- ถ้ากดปฏิเสธ (Block) หรือมีปัญหา ---
+          console.log("Error: " + err);
+          permissionBtn.textContent = '❌ ถูกปฏิเสธ! ลองกดใหม่';
+          permissionBtn.classList.add('opacity-50');
+          statusMessage.textContent = 'คุณต้องกด "Allow" ที่แถบด้านบนเพื่อเล่นนะครับ';
+          statusMessage.className = 'text-red-600 text-lg font-semibold';
+      });
+    }
+
+    async function startListening() {
+      try {
+        if (!window.micStream) {
+          statusMessage.textContent = '❌ ยังไม่ได้รับอนุญาตไมค์ กดปุ่มด้านบนก่อน';
+          return;
+        }
+        
+        if (!audioContext) {
+          audioContext = new (window.AudioContext || window.webkitAudioContext)();
+        }
+        
+        if (audioContext.state === 'suspended') {
+          await audioContext.resume();
+        }
+        
+        analyser = audioContext.createAnalyser();
+        analyser.fftSize = 256;
+        analyser.smoothingTimeConstant = 0.8;
+        
+        microphone = audioContext.createMediaStreamSource(window.micStream);
+        microphone.connect(analyser);
+        
+        isListening = true;
+        testStartTime = Date.now();
+        breathStrengths = [];
+        
+        startBtn.innerHTML = '⏹️ หยุดทดสอบ';
+        startBtn.classList.remove('from-emerald-500', 'to-green-500');
+        startBtn.classList.add('from-red-500', 'to-orange-500');
+        
+        statusMessage.textContent = '🎤 เป่าลมใส่ไมค์เลย!';
+        statusMessage.className = 'text-emerald-700 text-lg font-semibold';
+        
+        analyzeAudio();
+      } catch (error) {
+        statusMessage.textContent = '❌ ไม่สามารถเข้าถึงไมค์ได้ ลองใหม่อีกครั้ง';
+        statusMessage.className = 'text-red-600 text-lg font-semibold';
+        console.error('Start error:', error);
+      }
+    }
+
+    function stopListening() {
+      isListening = false;
+      if (animationFrameId) cancelAnimationFrame(animationFrameId);
+      
+      if (microphone) {
+        microphone.disconnect();
+        microphone = null;
+      }
+      
+      startBtn.innerHTML = '🎤 เริ่มทดสอบปอด';
+      startBtn.classList.remove('from-red-500', 'to-orange-500');
+      startBtn.classList.add('from-emerald-500', 'to-green-500');
+      
+      showResults();
+    }
+
+    function analyzeAudio() {
+      if (!isListening) return;
+      
+      const dataArray = new Uint8Array(analyser.frequencyBinCount);
+      analyser.getByteFrequencyData(dataArray);
+      
+      const average = dataArray.reduce((a, b) => a + b, 0) / dataArray.length;
+      const normalizedVolume = Math.min(average / 100, 1);
+      
+      breathFill.style.width = `${normalizedVolume * 100}%`;
+      
+      if (normalizedVolume > 0.1) {
+        breathStrengths.push(normalizedVolume);
+        breathDuration = (Date.now() - testStartTime) / 1000;
+        
+        if (normalizedVolume > 0.6) {
+          breathStatus.textContent = 'แรงมาก! 💪';
+          pulseRing.style.opacity = '1';
+        } else {
+          breathStatus.textContent = 'กำลังเป่า...';
+          pulseRing.style.opacity = '0.5';
+        }
+        
+        growTree(normalizedVolume);
+        if (Math.random() > 0.8) createParticle();
+      } else {
+        pulseRing.style.opacity = '0';
+      }
+      
+      animationFrameId = requestAnimationFrame(analyzeAudio);
+    }
+
+    function growTree(strength) {
+      // Increase growth based on breath strength
+      const growthIncrease = strength * 0.5;
+      treeGrowth = Math.min(treeGrowth + growthIncrease, 100);
+      
+      // Update growth bar
+      growthBar.style.width = `${treeGrowth}%`;
+      growthPercent.textContent = `${Math.round(treeGrowth)}%`;
+      
+      // Update tree appearance
+      const growthFactor = treeGrowth / 100;
+      
+      // Trunk height (30px to 150px)
+      const trunkHeight = 30 + (growthFactor * 120);
+      trunk.style.height = `${trunkHeight}px`;
+      
+      // Show foliage when growth > 10%
+      if (treeGrowth > 10) {
+        foliage.style.opacity = '1';
+        foliage.style.bottom = `${50 + trunkHeight - 30}px`;
+        
+        // Scale leaves
+        const leafScale = 0.5 + (growthFactor * 0.5);
+        const baseSize1 = 60 * (1 + growthFactor);
+        const baseSize2 = 70 * (1 + growthFactor);
+        const baseSize3 = 80 * (1 + growthFactor);
+        
+        leaf1.style.width = `${baseSize1}px`;
+        leaf1.style.height = `${baseSize1}px`;
+        leaf2.style.width = `${baseSize2}px`;
+        leaf2.style.height = `${baseSize2}px`;
+        leaf3.style.width = `${baseSize3}px`;
+        leaf3.style.height = `${baseSize3}px`;
+        
+        // Add breathing animation when actively blowing
+        if (strength > 0.3) {
+          foliage.classList.add('breathing');
+        } else {
+          foliage.classList.remove('breathing');
+        }
+      }
+      
+      // Show flowers when growth > 70%
+      if (treeGrowth > 70) {
+        const flowers = document.querySelectorAll('.flower');
+        flowers.forEach((flower, index) => {
+          if (treeGrowth > 70 + (index * 5)) {
+            flower.style.opacity = '1';
+          }
+        });
+      }
+      
+      // Update status message
+      if (treeGrowth >= 100) {
+        statusMessage.textContent = '🎉 ต้นไม้เติบโตเต็มที่แล้ว! ปอดคุณแข็งแรงมาก!';
+        stopListening();
+      } else if (treeGrowth > 70) {
+        statusMessage.textContent = '🌸 เยี่ยมมาก! ต้นไม้กำลังออกดอก!';
+      } else if (treeGrowth > 40) {
+        statusMessage.textContent = '🌿 ดีมาก! ต้นไม้กำลังเติบโต!';
+      } else if (treeGrowth > 10) {
+        statusMessage.textContent = '🌱 ต้นกล้าเริ่มงอกแล้ว!';
+      }
+    }
+
+    function createParticle() {
+      const particle = document.createElement('div');
+      particle.className = 'particle';
+      particle.style.left = `${Math.random() * 100}%`;
+      particle.style.bottom = `${60 + Math.random() * 100}px`;
+      particle.style.animation = 'float-up 2s ease-out forwards';
+      
+      treeContainer.appendChild(particle);
+      
+      setTimeout(() => particle.remove(), 2000);
+    }
+
+    function showResults() {
+      startBtn.classList.add('hidden');
+      resultsPanel.classList.remove('hidden');
+      
+      // Calculate results
+      const avgStrength = breathStrengths.length > 0 
+        ? breathStrengths.reduce((a, b) => a + b, 0) / breathStrengths.length 
+        : 0;
+      
+      const maxStrength = breathStrengths.length > 0 
+        ? Math.max(...breathStrengths) 
+        : 0;
+      
+      // Calculate consistency (standard deviation)
+      const variance = breathStrengths.length > 0
+        ? breathStrengths.reduce((sum, val) => sum + Math.pow(val - avgStrength, 2), 0) / breathStrengths.length
+        : 0;
+      const consistency = 1 - Math.min(Math.sqrt(variance), 1);
+      
+      // Display results
+      document.getElementById('result-strength').textContent = `${Math.round(maxStrength * 100)}%`;
+      document.getElementById('result-duration').textContent = `${breathDuration.toFixed(1)}วิ`;
+      document.getElementById('result-consistency').textContent = `${Math.round(consistency * 100)}%`;
+      
+      // Calculate grade
+      const score = (treeGrowth * 0.5) + (avgStrength * 100 * 0.3) + (consistency * 100 * 0.2);
+      let grade, message;
+      
+      if (score >= 80) {
+        grade = 'A';
+        message = '🏆 ยอดเยี่ยม! ปอดของคุณแข็งแรงมาก!';
+      } else if (score >= 60) {
+        grade = 'B';
+        message = '👏 ดีมาก! ปอดของคุณอยู่ในเกณฑ์ดี';
+      } else if (score >= 40) {
+        grade = 'C';
+        message = '💪 พอใช้ ลองฝึกหายใจลึกๆ บ่อยๆ นะ';
+      } else if (score >= 20) {
+        grade = 'D';
+        message = '🌱 ต้องปรับปรุง ลองเลิกบุหรี่และออกกำลังกายนะ';
+      } else {
+        grade = 'F';
+        message = '❤️ ไม่เป็นไร เริ่มดูแลสุขภาพตั้งแต่วันนี้!';
+      }
+      
+      document.getElementById('result-grade').textContent = grade;
+      document.getElementById('result-message').textContent = message;
+    }
+
+    function resetTree() {
+      treeGrowth = 0;
+      breathStrengths = [];
+      breathDuration = 0;
+      testStartTime = null;
+      
+      trunk.style.height = '30px';
+      foliage.style.opacity = '0';
+      growthBar.style.width = '0%';
+      growthPercent.textContent = '0%';
+      breathFill.style.width = '0%';
+      breathStatus.textContent = 'รอการเป่า...';
+      
+      document.querySelectorAll('.flower').forEach(f => f.style.opacity = '0');
+      
+      statusContainer.classList.add('hidden');
+    }
+  </script>
+ <script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'9da04beff406f305',t:'MTc3MzEyNDQ5OC4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+</html>
